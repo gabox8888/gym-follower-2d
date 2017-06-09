@@ -1,19 +1,19 @@
 import gym
-import gym_navigation_2d
+import gym_follower_2d
 
-from env_generator import EnvironmentGenerator, Environment, EnvironmentCollection, Obstacle
+from env_generator import Environment, EnvironmentCollection
 import numpy as np
 import time
 import cv2
 
-env = gym.make('Image-Based-Navigation-2d-Map0-Goal0-v0')
+env = gym.make('Image-Based-Follower-2d-Map0-v0')
 
 observation = env.reset()
-for t in range(100):
+for t in range(1000):
     env.render()
 
-    action = env.action_space.sample()
-
+    #action = env.action_space.sample()
+    action = np.array([.0,.0])
     observation, reward, done, info = env.step(action)
 
     obs_bgr = cv2.cvtColor(observation, cv2.COLOR_RGB2BGR)

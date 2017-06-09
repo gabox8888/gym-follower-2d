@@ -1,12 +1,12 @@
 import gym
-import gym_navigation_2d
+import gym_follower_2d
 
-from env_generator import Environment, EnvironmentCollection, Obstacle
+from env_generator import Environment, EnvironmentCollection
 import numpy as np
 import time
 import timeit
 
-env = gym.make('State-Based-MDP-Navigation-2d-Map0-Goal2-v0')
+env = gym.make('State-Based-Follower-2d-Map0-v0')
 
 observation = env.reset()
 dt1 = []

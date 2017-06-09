@@ -1,3 +1,3 @@
-from gym_follower_2d.envs.range_based_following import LimitedRangeBasedFollowing2DEnv #, StateBasedFollowing2DEnv
-#from gym_follower_2d.envs.image_based_navigation import ImageBasedFollowing2DEnv
+from gym_follower_2d.envs.range_based_following import LimitedRangeBasedFollowing2DEnv, StateBasedFollowing2DEnv
+from gym_follower_2d.envs.image_based_following import ImageBasedFollowing2DEnv
 from gym_follower_2d.envs import env_utils, geometry_utils

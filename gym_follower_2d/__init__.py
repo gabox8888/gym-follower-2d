@@ -21,13 +21,19 @@ for i in range(10):
         max_episode_steps=1000,
         kwargs=dict(world_idx=i, destinations = idx_to_goal[i])
     )
+
+    register(
+        id='State-Based-Follower-2d-Map%d-v0' % i,
+        entry_point='gym_follower_2d.envs:StateBasedFollowing2DEnv',
+        max_episode_steps=1000,
+        kwargs=dict(world_idx=i, destinations = idx_to_goal[i])
+    )
+
     
-"""
     register(
         id='Image-Based-Follower-2d-Map%d-v0' % i,
         entry_point='gym_follower_2d.envs:ImageBasedFollowing2DEnv',
         max_episode_steps=1000,
         kwargs=dict(world_idx=i, destinations = idx_to_goal[i])
     )
-"""
     
