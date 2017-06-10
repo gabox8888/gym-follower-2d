@@ -9,7 +9,6 @@ from math import pi, cos, sin
 import numpy as np
 import random
 
-from rrt import State
 
 import os
 
@@ -55,7 +54,12 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
         
         self.add_self_position_to_observation = add_self_position_to_observation
         self.add_goal_position_to_observation = add_goal_position_to_observation
-        self.set_initial_positions(initial_follower_position, initial_target_position)
+
+        assert not (self.destinations is None)
+        self.init_follower_position = initial_follower_position
+        self.init_target_position = initial_target_position
+        self.state = np.concatenate((self.init_follower_position, self.init_target_position))
+        #self.observation = self._get_observation(self.state, target_is_visible=True)
         
         low = np.array([0.0, 0.0])
         high = np.array([self.max_follower_speed, 2*pi])
@@ -81,13 +85,6 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
         self.target_path = self.target_paths[random_destination_idx][0]
         self.target_path_length_crossed = 0
         self.target_path_current_waypoint_idx = 0
-        
-    def set_initial_positions(self, init_follower_position, init_target_position):
-        assert not (self.destinations is None)
-        self.init_follower_position = init_follower_position
-        self.init_target_position = init_target_position
-        self.state = np.concatenate((self.init_follower_position, self.init_target_position))
-        self.observation = self._get_observation(self.state, target_is_visible=True)
         
     def _get_observation(self, state, target_is_visible):
         delta_angle = 2*pi/self.num_beams
@@ -197,6 +194,7 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
         polygon = rendering.make_circle(radius=5, res=30, filled=True)
         target_tr = rendering.Transform(translation=(state[2], state[3]))
         polygon.add_attr(target_tr)
+        polygon.set_color(0.0,1.0,0.0)
         viewer.add_onetime(polygon)
         
 
@@ -276,28 +274,49 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
 class StateBasedFollowing2DEnv(LimitedRangeBasedFollowing2DEnv):
     def __init__(self, *args, **kwargs):
         LimitedRangeBasedFollowing2DEnv.__init__(self, *args, **kwargs)
-        low = [-float('inf'), -float('inf'), 0.0, 0.0, -float('inf'), -float('inf'), 0.0]
-        high = [float('inf'), float('inf'), float('inf'), 2*pi, float('inf'), float('inf'), 1.0]
+        
+        self.rectangles = [(c[0], c[1], w,h) for obs in self.world.obstacles for c, w, h in zip(obs.rectangle_centers,
+                                                                                                obs.rectangle_widths,
+                                                                                                obs.rectangle_heights)]
 
+        self.rectangle_obs_vector = [el for rect in self.rectangles for el in rect]
+
+        
+        inf = 100000.0
+        low = [-inf, -inf, 0.0, 0.0, -inf, -inf, 0.0] 
+        high = [inf, inf, inf, 2*pi, inf, inf, 1.0]
+
+        low.extend([-inf, -inf, self.world.x_range[0], self.world.y_range[0]] * len(self.rectangles))
+        high.extend([inf,  inf, self.world.x_range[1], self.world.y_range[1]] * len(self.rectangles))
+
+        
         if self.add_goal_position_to_observation:
             low.extend([-10000., -10000.] * len(self.destinations)) # x and y coords
             high.extend([10000., 10000.] * len(self.destinations))
 
+            
         self.observation_space = Box(np.array(low), np.array(high))
 
+        
     def _plot_observation(self, viewer, state, observation):
         pass
 
+    
     def _get_observation(self, state, target_is_visible):
         dist_to_closest_obstacle, absolute_angle_to_closest_obstacle = self.world.range_and_bearing_to_closest_obstacle(state[0], state[1])
 
         if target_is_visible:
-            obs = np.array([state[0], state[1], dist_to_closest_obstacle, absolute_angle_to_closest_obstacle, state[2], state[3], 1.0])
+            obs =  [state[0], state[1], dist_to_closest_obstacle, absolute_angle_to_closest_obstacle, state[2], state[3], 1.0] 
         else:
-            obs = np.array([state[0], state[1], dist_to_closest_obstacle, absolute_angle_to_closest_obstacle, -1.0, -1.0, 0.0])
+            obs =  [state[0], state[1], dist_to_closest_obstacle, absolute_angle_to_closest_obstacle, -1.0, -1.0, 0.0] 
+
+
+        obs.extend(self.rectangle_obs_vector)
+
+        obs = np.array(obs)
 
         if self.add_goal_position_to_observation:
             obs = np.concatenate([obs] + self.destinations)
-            
+
         return obs
 

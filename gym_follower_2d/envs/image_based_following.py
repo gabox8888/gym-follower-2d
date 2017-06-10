@@ -16,7 +16,8 @@ class ImageBasedFollowing2DEnv(StateBasedFollowing2DEnv):
 
     def __init__(self, *args, **kwargs):
         StateBasedFollowing2DEnv.__init__(self, *args, **kwargs)
-        self.observation_space = Box(0., 255., self.world.image.shape)
+        self.obs_img_shape = (80, 60, 3)
+        self.observation_space = Box(0., 255., (self.obs_img_shape[1], self.obs_img_shape[0], 3))
 
     def _get_observation(self, state, target_is_visible):
         image = self.world.image.copy()
@@ -56,4 +57,5 @@ class ImageBasedFollowing2DEnv(StateBasedFollowing2DEnv):
         
             
         image = cv2.flip(image, flipCode=0)
+        image = cv2.resize(image, self.obs_img_shape[0:2])
         return image

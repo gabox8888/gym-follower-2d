@@ -101,7 +101,8 @@ def rollout_policy(agent, env, max_path_length=200, speedup=1, get_image_observa
             rewards.append(r)
 
     if animated:
-        env.render(close=True)
+        #env.render(close=True)
+        env.render()
 
     im_observations = tensor_utils.stack_tensor_list(im_observations)
     observations = tensor_utils.stack_tensor_list(observations)

@@ -15,8 +15,8 @@ import rllab.misc.logger as logger
 import pickle
 import os.path as osp
 import numpy as np
-from multitask_benchmarks.utils import *
-import gym_navigation_2d
+from baselines.utils import *
+import gym_follower_2d
 
 import tensorflow as tf
 
@@ -49,7 +49,6 @@ for env_name in args.envs:
 policy = GaussianMLPPolicy(
 name="policy",
 env_spec=env.spec,
-# The neural network policy should have two hidden layers, each with 32 hidden units.
 hidden_sizes=(100, 50, 25),
 hidden_nonlinearity=tf.nn.relu,
 )
@@ -78,7 +77,9 @@ with tf.Session() as sess:
 
         rollouts = algo.obtain_samples(args.num_epochs + 1)
 
-        logger.log("Average reward for training rollouts on (%s): %f +- %f " % (env_name, np.mean([np.sum(p['rewards']) for p in rollouts]),  np.std([np.sum(p['rewards']) for p in rollouts])))
+        logger.log("Average reward for training rollouts on (%s): %f +- %f " % (env_name,
+                                                                                np.mean([np.sum(p['rewards']) for p in rollouts]),
+                                                                                np.std([np.sum(p['rewards']) for p in rollouts])))
 
     # Final evaluation on all environments using the learned policy
 
@@ -90,6 +91,9 @@ with tf.Session() as sess:
             rollouts.append(rollout)
             total_rollouts.append(rollout)
 
-        logger.log("Average reward for eval rollouts on (%s): %f +- %f " % (env_name, np.mean([np.sum(p['rewards']) for p in rollouts]),  np.std([np.sum(p['rewards']) for p in rollouts])))
+        logger.log("Average reward for eval rollouts on (%s): %f +- %f " % (env_name,
+                                                                            np.mean([np.sum(p['rewards']) for p in rollouts]),
+                                                                            np.std([np.sum(p['rewards']) for p in rollouts])))
 
-    logger.log("Total Average across all rollouts and envs: %f +- %f " % (np.mean([np.sum(p['rewards']) for p in total_rollouts]),  np.std([np.sum(p['rewards']) for p in total_rollouts])))
+    logger.log("Total Average across all rollouts and envs: %f +- %f " % (np.mean([np.sum(p['rewards']) for p in total_rollouts]),
+                                                                          np.std([np.sum(p['rewards']) for p in total_rollouts])))
