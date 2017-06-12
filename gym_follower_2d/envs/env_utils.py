@@ -3,8 +3,7 @@ from scipy import stats
 import numpy as np
 from math import sqrt, asin, cos, sin, atan2, ceil
 import networkx as nx
-from gym_navigation_2d.envs.env_utils import *
-from gym_navigation_2d.envs.geometry_utils import *
+from gym_follower_2d.envs.geometry_utils import *
 import sys
 import pickle
 
@@ -89,6 +88,27 @@ class Environment(object):
         w = x_range[1] - x_range[0]
         h = y_range[1] - y_range[0]
 
+        self.compute_occupancy_grid(w, h)
+
+        """
+        self.image = 255*np.ones((h, w, 3), dtype='uint8')
+        for obs in self.obstacles:
+            for co, wo, ho in zip(obs.rectangle_centers, obs.rectangle_widths, obs.rectangle_heights):
+                r = co[1]
+                c = co[0]
+                min_row = max(int(r - ho/2.0), 0)
+                max_row = min(int(r + ho/2.0), h-1)
+                
+                min_col = max(int(c - wo/2.0), 0)
+                max_col = min(int(c + wo/2.0), w-1)
+
+                self.image[min_row:max_row, min_col:max_col, :] = (204, 153, 102)
+        """
+
+    def __eq__(self, other):
+        return self.obstacles == other.obstacles and self.x_range == other.x_range and self.y_range == other.y_range
+
+    def compute_occupancy_grid(self, w, h):
         self.image = 255*np.ones((h, w, 3), dtype='uint8')
         for obs in self.obstacles:
             for co, wo, ho in zip(obs.rectangle_centers, obs.rectangle_widths, obs.rectangle_heights):
@@ -102,9 +122,6 @@ class Environment(object):
 
                 self.image[min_row:max_row, min_col:max_col, :] = (204, 153, 102)
 
-
-    def __eq__(self, other):
-        return self.obstacles == other.obstacles and self.x_range == other.x_range and self.y_range == other.y_range
                 
     def point_distance_from_obstacles(self, x, y):
         dist = [obs.distance_to_point(x, y) for obs in self.obstacles]
@@ -135,7 +152,8 @@ class Environment(object):
         a = np.array([x1,y1])
         b = np.array([x2,y2])
         L = np.linalg.norm(b-a)
-        return all([self.point_is_in_free_space(a[0] + i/L*(b[0]-a[0]), a[1] + i/L*(b[1]-a[1])) for i in range(ceil(L))])
+        fs = [self.point_is_in_free_space(a[0] + i/L*(b[0]-a[0]), a[1] + i/L*(b[1]-a[1])) for i in range(ceil(L))]
+        return all(fs)
         
 
     def segment_distance_from_obstacles(self, x1, y1, x2, y2):

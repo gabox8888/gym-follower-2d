@@ -1,7 +1,8 @@
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from .env_generator import Environment, EnvironmentCollection
+from gym_follower_2d.envs.env_utils import Environment 
+from gym_follower_2d.envs.env_generator import EnvironmentCollection 
 from gym.envs.classic_control import rendering
 from gym.spaces import Box, Tuple
 
@@ -64,7 +65,8 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
         low = np.array([0.0, 0.0])
         high = np.array([self.max_follower_speed, 2*pi])
         self.action_space = Box(low, high)
-        
+
+
         low = [-1.0] * (self.num_beams + 3)
         high = [self.max_observation_range] * (self.num_beams + 3)
 
@@ -108,12 +110,15 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
 
         return obs_vector
 
+    def _sample_target_speed(self):
+        return random.betavariate(alpha=5, beta=1) * self.max_target_speed
+    
     def _target_step(self):
         if self.target_path_current_waypoint_idx >= len(self.target_path)-1:
             # target does not move
             return
 
-        v = random.betavariate(alpha=5, beta=1) * self.max_target_speed
+        v = self._sample_target_speed()
         
         for i in range(self.target_path_current_waypoint_idx + 1, len(self.target_path)):
             
@@ -133,10 +138,13 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
 
     def target_is_visible(self, state):
         dist = np.linalg.norm(state[0:2] - state[2:4])
-        return dist < self.max_observation_range and self.world.segment_is_in_free_space(state[0], state[1], state[2], state[3], epsilon=0.25)
+        dist_ok = dist < self.max_observation_range
+        fs_ok = self.world.segment_is_in_free_space(state[0], state[1], state[2], state[3])
+        return dist_ok and fs_ok 
 
     
     def _step(self, action):
+
         old_state = self.state.copy()
 
         v = action[0]
@@ -144,6 +152,7 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
         dx = v*cos(theta)
         dy = v*sin(theta)
 
+        #print (v, theta)
         self.state[0:2] += np.array([dx, dy])
         self._target_step()
         
