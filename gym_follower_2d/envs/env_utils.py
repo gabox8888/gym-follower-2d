@@ -6,6 +6,7 @@ import networkx as nx
 from gym_follower_2d.envs.geometry_utils import *
 import sys
 import pickle
+import cv2
 
 
 class Obstacle(object):
@@ -80,7 +81,7 @@ class Obstacle(object):
         return closest_points_to_segments[idx]
 
 class Environment(object):
-    def __init__(self, x_range, y_range, obstacles):
+    def __init__(self, x_range, y_range, obstacles,fromImage=False):
         self.obstacles = obstacles
         self.x_range = x_range
         self.y_range = y_range
@@ -88,7 +89,11 @@ class Environment(object):
         w = x_range[1] - x_range[0]
         h = y_range[1] - y_range[0]
 
-        self.compute_occupancy_grid(w, h)
+
+        if fromImage:
+            self.compute_occupancy_grid_from_map(w,h)
+        else:
+             self.compute_occupancy_grid(w, h)
 
         """
         self.image = 255*np.ones((h, w, 3), dtype='uint8')
@@ -107,6 +112,11 @@ class Environment(object):
 
     def __eq__(self, other):
         return self.obstacles == other.obstacles and self.x_range == other.x_range and self.y_range == other.y_range
+
+    def compute_occupancy_grid_from_map(self,w,h):
+        self.image = 255*np.ones((h, w, 3), dtype='uint8')
+        # for i,j in self.obstacles:
+        #     self.image[i][j] =  (204, 153, 102)
 
     def compute_occupancy_grid(self, w, h):
         self.image = 255*np.ones((h, w, 3), dtype='uint8')

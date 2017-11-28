@@ -2,7 +2,8 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 from gym_follower_2d.envs.env_utils import Environment 
-from gym_follower_2d.envs.env_generator import EnvironmentCollection 
+from gym_follower_2d.envs.env_generator import EnvironmentCollection
+from gym_follower_2d.envs.image_env_generator import ImageEnvironmentCollection 
 from gym.envs.classic_control import rendering
 from gym.spaces import Box, Tuple
 
@@ -17,7 +18,7 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self,
-                 worlds_pickle_filename=os.path.join(os.path.dirname(__file__), "assets", "worlds_640x480_v2.pkl"),
+                 worlds_pickle_filename=os.path.join(os.path.dirname(__file__), "assets", "worlds_640x480_v3.pkl"),
                  world_idx=0,
                  initial_follower_position = np.array([50.0, 10.0]),
                  initial_target_position = np.array([50.0, 30.0]),
@@ -29,8 +30,7 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
                  destination_tolerance_range=20.0,
                  add_self_position_to_observation=False,
                  add_goal_position_to_observation=False):
-
-        worlds = EnvironmentCollection()
+        worlds = ImageEnvironmentCollection()
         worlds.read(worlds_pickle_filename)
 
         target_path = np.concatenate((np.linspace(initial_target_position[0], destinations[0][0], 100),
@@ -229,23 +229,25 @@ class LimitedRangeBasedFollowing2DEnv(gym.Env):
                                    destination=None,
                                    destination_tolerance_range=None):
 
-        viewer.set_bounds(left=-100, right=screen_width+100, bottom=-100, top=screen_height+100)
+        viewer.set_bounds(left=-10, right=screen_width+10, bottom=-10, top=screen_height+10)
 
         L = len(obstacles)
         for i in range(L):
 
-            obs = obstacles[i]
-            for c,w,h in zip(obs.rectangle_centers, obs.rectangle_widths, obs.rectangle_heights):
-                l = -w/2.0
-                r = w/2.0
-                t = h/2.0
-                b = -h/2.0
+            obs = obstacles[i].perimeterPoints
+            # for c,w,h in zip(obs.rectangle_centers, obs.rectangle_widths, obs.rectangle_heights):
+            #     l = -w/2.0
+            #     r = w/2.0
+            #     t = h/2.0
+            #     b = -h/2.0
 
-                rectangle = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
-                tr = rendering.Transform(translation=(c[0], c[1]))
-                rectangle.add_attr(tr)
-                rectangle.set_color(.8,.6,.4)
-                viewer.add_geom(rectangle)
+            shape = rendering.FilledPolygon(obs)
+
+            #rectangle = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            # tr = rendering.Transform(translation=(obs[1], obs[0]))
+            # rectangle.add_attr(tr)
+            shape.set_color(.8,.6,.4)
+            viewer.add_geom(shape)
 
 
         if not (destination is None):
@@ -284,19 +286,19 @@ class StateBasedFollowing2DEnv(LimitedRangeBasedFollowing2DEnv):
     def __init__(self, *args, **kwargs):
         LimitedRangeBasedFollowing2DEnv.__init__(self, *args, **kwargs)
         
-        self.rectangles = [(c[0], c[1], w,h) for obs in self.world.obstacles for c, w, h in zip(obs.rectangle_centers,
-                                                                                                obs.rectangle_widths,
-                                                                                                obs.rectangle_heights)]
+        #self.rectangles = [(c[0], c[1], w,h) for obs in self.world.obstacles for c, w, h in zip(obs.rectangle_centers,
+                                                                                                #obs.rectangle_widths,
+                                                                                                #obs.rectangle_heights)]
 
-        self.rectangle_obs_vector = [el for rect in self.rectangles for el in rect]
+        #self.rectangle_obs_vector = [el for rect in self.rectangles for el in rect]
 
         
         inf = 100000.0
         low = [-inf, -inf, 0.0, 0.0, -inf, -inf, 0.0] 
         high = [inf, inf, inf, 2*pi, inf, inf, 1.0]
 
-        low.extend([-inf, -inf, self.world.x_range[0], self.world.y_range[0]] * len(self.rectangles))
-        high.extend([inf,  inf, self.world.x_range[1], self.world.y_range[1]] * len(self.rectangles))
+        #low.extend([-inf, -inf, self.world.x_range[0], self.world.y_range[0]] * len(self.rectangles))
+        #high.extend([inf,  inf, self.world.x_range[1], self.world.y_range[1]] * len(self.rectangles))
 
         
         if self.add_goal_position_to_observation:

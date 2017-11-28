@@ -9,7 +9,10 @@ from gym_follower_2d.envs.env_utils import *
 from gym_follower_2d.envs.geometry_utils import *
 import sys
 import pickle
-
+import cv2
+from os import path
+import math
+import sys
 
 class EnvironmentGenerator(object):
 
@@ -47,11 +50,11 @@ class EnvironmentGenerator(object):
         # Only keep obstacels that are fully within allowed range
         # This is so that pixel occupancy queries are the same as
         # continuous distance queries, if they are ever used 
-        x_within_bounds = centers[:, 0] + widths[:, 0]/2.0 <= x_range[1] 
-        x_within_bounds = x_within_bounds * (centers[:, 0] - widths[:, 0]/2.0 >= x_range[0])
+        x_within_bounds = centers[:, 0] + widths[:, 0]/2.0 <= self.x_range[1] 
+        x_within_bounds = x_within_bounds * (centers[:, 0] - widths[:, 0]/2.0 >= self.x_range[0])
         
-        y_within_bounds = centers[:, 1] + heights[:, 0]/2.0 <= y_range[1] 
-        y_within_bounds = y_within_bounds * (centers[:, 1] - heights[:, 0]/2.0 >= y_range[0])
+        y_within_bounds = centers[:, 1] + heights[:, 0]/2.0 <= self.y_range[1] 
+        y_within_bounds = y_within_bounds * (centers[:, 1] - heights[:, 0]/2.0 >= self.y_range[0])
         
         valid_idx = x_within_bounds * y_within_bounds
         return centers[valid_idx, :], widths[valid_idx, :], heights[valid_idx, :]
@@ -103,21 +106,22 @@ class EnvironmentCollection(object):
         eg = EnvironmentGenerator(x_range, y_range, width_range, height_range)
         for i in range(self.num_environments):
             print('Sampling environment', i)
-            centers, widths, heights = eg.sample_axis_aligned_rectangles(density)
-            obstacles = eg.merge_rectangles_into_obstacles(centers, widths, heights, epsilon=0.2)
-            self.map_collection[i] = Environment(self.x_range, self.y_range, list(obstacles.values()))
+            # obstacles = eg.generate_from_image('C:\\Users\\gabri\\Documents\\McGill\\Robo Research\\fast_sampling_irl\data\\aerial_images\\map_1\\feature_maps')
+            # centers, widths, heights = eg.sample_axis_aligned_rectangles(density)
+            # obstacles = eg.merge_rectangles_into_obstacles(centers, widths, heights, epsilon=0.2)
+            self.map_collection[i] = Environment(self.x_range, self.y_range, obstacles,fromImage=True)
 
     def read(self, pkl_filename):
         file_object = open(pkl_filename, 'rb')
         self.x_range, self.y_range, worlds_without_classes = pickle.load(file_object, encoding='bytes')    
-        self.map_collection = {idx: Environment(val[0], val[1], [Obstacle(c,w,h) for c,w,h in val[2]]) for idx, val in worlds_without_classes.items()}
+        self.map_collection = {idx: Environment(val[0], val[1], val[2]) for idx, val in worlds_without_classes.items()}
         file_object.close()
 
     def save(self, pkl_filename):
         file_object = open(pkl_filename, 'wb')
         worlds_without_classes = { idx : (world.x_range,
                                           world.y_range,
-                                        [(obs.rectangle_centers, obs.rectangle_widths, obs.rectangle_heights)  for obs in world.obstacles])
+                                        world.obstacles)
 
                                    for idx, world in self.map_collection.items()}
 

@@ -1,11 +1,11 @@
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from .env_generator import Environment, EnvironmentCollection
+from gym_follower_2d.envs.env_generator import Environment, EnvironmentCollection
 from gym.envs.classic_control import rendering
 from gym.spaces import Box, Tuple
 
-from .range_based_following import StateBasedFollowing2DEnv
+from gym_follower_2d.envs.range_based_following import StateBasedFollowing2DEnv
 from math import pi, cos, sin, floor
 import numpy as np
 import cv2

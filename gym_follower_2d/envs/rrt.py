@@ -128,7 +128,7 @@ class RRT(object):
 
         plan = [start_state]
         
-        for step in xrange(max_num_steps):
+        for step in range(max_num_steps):
 
             s_rand = self.sample_state()
             s_nearest = self.find_closest_state(tree_nodes, s_rand)
@@ -156,7 +156,7 @@ class RRT(object):
         while True:
             
             gradE = (new_path - old_path) 
-            for i in xrange(1, len(path)-1):
+            for i in range(1, len(path)-1):
                 gradE[i, :] -= alpha*(new_path[i+1, :] + new_path[i-1, :] - 2*new_path[i, :])
 
             gradE[0, :] = 0
@@ -174,7 +174,7 @@ class RRT(object):
                                                             proposed_new_path[i+1][0],
                                                             proposed_new_path[i+1][1]) \
                           
-                        for i in xrange(1, proposed_new_path.shape[0]-1)]
+                        for i in range(1, proposed_new_path.shape[0]-1)]
 
 
             improving_idx = [self.world.segment_distance_from_obstacles(proposed_new_path[i][0],
@@ -187,7 +187,7 @@ class RRT(object):
                                                                         old_path[i+1][0],
                                                                         old_path[i+1][1])
                              
-                             for i in xrange(1, proposed_new_path.shape[0]-1)]
+                             for i in range(1, proposed_new_path.shape[0]-1)]
 
             safe_idx = np.array([False] + safe_idx + [False])
             improving_idx = np.array([False] + improving_idx + [False])
@@ -199,7 +199,7 @@ class RRT(object):
             new_path[safe_idx, :] = proposed_new_path[safe_idx, :]
             it += 1
 
-        for i in xrange(1, len(path)-1):
+        for i in range(1, len(path)-1):
             path[i].x = new_path[i, 0]
             path[i].y = new_path[i, 1]
 

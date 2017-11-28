@@ -21,6 +21,9 @@ def point_to_segment_distance(p, a, b):
     cp = closest_point_on_segment(p, a, b)
     return np.linalg.norm(cp - p) 
 
+def point_to_point(p1,p2):
+    return np.linalg.norm(p1-p2)
+
 def point_to_rectangle_distance(p, ca, wa, ha):
 
     if (abs(p-ca) < np.array([wa/2.0, ha/2.0])).all():
